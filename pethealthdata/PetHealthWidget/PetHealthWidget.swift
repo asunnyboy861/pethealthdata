@@ -18,6 +18,8 @@ struct PetHealthEntry: TimelineEntry {
     let date: Date
     let petCount: Int
     let upcomingVaccines: Int
+    let petNames: [String]
+    let petSpecies: [String]
 }
 
 struct PetHealthProvider: TimelineProvider {
@@ -25,29 +27,35 @@ struct PetHealthProvider: TimelineProvider {
         PetHealthEntry(
             date: Date(),
             petCount: 0,
-            upcomingVaccines: 0
+            upcomingVaccines: 0,
+            petNames: [],
+            petSpecies: []
         )
     }
     
     func getSnapshot(in context: Context, completion: @escaping (PetHealthEntry) -> Void) {
-        let entry = PetHealthEntry(
-            date: Date(),
-            petCount: 0,
-            upcomingVaccines: 0
-        )
+        let entry = loadCurrentEntry()
         completion(entry)
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<PetHealthEntry>) -> Void) {
-        let entry = PetHealthEntry(
-            date: Date(),
-            petCount: 0,
-            upcomingVaccines: 0
-        )
+        let entry = loadCurrentEntry()
         
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
         completion(timeline)
+    }
+    
+    private func loadCurrentEntry() -> PetHealthEntry {
+        let sharedData = SharedDataManager.shared
+        
+        return PetHealthEntry(
+            date: Date(),
+            petCount: sharedData.getPetCount(),
+            upcomingVaccines: sharedData.getUpcomingVaccines(),
+            petNames: sharedData.getPetNames(),
+            petSpecies: sharedData.getPetSpecies()
+        )
     }
 }
 
@@ -143,27 +151,51 @@ struct PetHealthWidgetEntryView: View {
             
             Divider()
             
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "pawprint.fill")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(entry.petCount) pet\(entry.petCount == 1 ? "" : "s")")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .lineLimit(1)
-                        
-                        Text("Open app to view details")
+            if entry.petNames.isEmpty {
+                Text("Open app to view details")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            } else {
+                ForEach(Array(entry.petNames.prefix(3).enumerated()), id: \.offset) { index, name in
+                    HStack(spacing: 6) {
+                        let species = index < entry.petSpecies.count ? entry.petSpecies[index] : "other"
+                        Image(systemName: speciesIcon(for: species))
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(speciesColor(for: species))
+                        
+                        Text(name)
+                            .font(.caption)
+                            .lineLimit(1)
                     }
+                }
+                
+                if entry.petCount > 3 {
+                    Text("+\(entry.petCount - 3) more")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(.fill.tertiary, for: .widget)
+    }
+    
+    private func speciesIcon(for species: String) -> String {
+        switch species.lowercased() {
+        case "dog": return "dog.fill"
+        case "cat": return "cat.fill"
+        case "bird": return "bird.fill"
+        default: return "pawprint.fill"
+        }
+    }
+    
+    private func speciesColor(for species: String) -> Color {
+        switch species.lowercased() {
+        case "dog": return .blue
+        case "cat": return .pink
+        case "bird": return .green
+        default: return .orange
+        }
     }
 }
 
@@ -173,7 +205,9 @@ struct PetHealthWidgetEntryView: View {
 } timeline: {
     PetHealthEntry(
         date: .now,
-        petCount: 0,
-        upcomingVaccines: 0
+        petCount: 2,
+        upcomingVaccines: 1,
+        petNames: ["Max", "Luna"],
+        petSpecies: ["dog", "cat"]
     )
 }

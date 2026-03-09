@@ -57,6 +57,7 @@
 		6AE199D82F5EF7A7001049A0 /* PetHealthWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PetHealthWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AE199DA2F5EF7A7001049A0 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		6AE199DC2F5EF7A7001049A0 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		6AE7794F2F5F0A20003AB48C /* PetHealthWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PetHealthWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -132,6 +133,7 @@
 		6A3AB6DB2F5ED34600393E50 = {
 			isa = PBXGroup;
 			children = (
+				6AE7794F2F5F0A20003AB48C /* PetHealthWidgetExtension.entitlements */,
 				6A3AB6E62F5ED34600393E50 /* pethealthdata */,
 				6A3AB6F42F5ED34700393E50 /* pethealthdataTests */,
 				6A3AB6FE2F5ED34700393E50 /* pethealthdataUITests */,
@@ -645,6 +647,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PetHealthWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JP4TN5PTS3;
@@ -673,6 +676,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = PetHealthWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = JP4TN5PTS3;

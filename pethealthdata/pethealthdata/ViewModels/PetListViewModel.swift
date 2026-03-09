@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import SwiftUI
+import WidgetKit
 
 @Observable
 final class PetListViewModel {
@@ -26,9 +27,23 @@ final class PetListViewModel {
         
         do {
             pets = try modelContext.fetch(descriptor)
+            syncToWidget()
         } catch {
             print("Failed to fetch pets: \(error)")
         }
+    }
+    
+    private func syncToWidget() {
+        let sharedData = SharedDataManager.shared
+        
+        sharedData.savePetCount(pets.count)
+        sharedData.savePetNames(pets.map { $0.name })
+        sharedData.savePetSpecies(pets.map { $0.species })
+        
+        let upcomingCount = pets.reduce(0) { $0 + $1.upcomingVaccinesCount }
+        sharedData.saveUpcomingVaccines(upcomingCount)
+        
+        WidgetCenter.shared.reloadTimelines(ofKind: "PetHealthWidget")
     }
     
     func addPet(_ pet: Pet) {
