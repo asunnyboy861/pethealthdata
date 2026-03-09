@@ -7,7 +7,7 @@ final class NotificationService {
     private init() {}
     
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound, .criticalAlert]) { granted, error in
             if let error = error {
                 print("Notification authorization error: \(error)")
             }
@@ -32,7 +32,7 @@ final class NotificationService {
         
         let calendar = Calendar.current
         
-        let daysToNotify = [7, 3, 1, 0]
+        let daysToNotify = [30, 14, 7, 3, 1, 0]
         
         for days in daysToNotify {
             let notifyDate = calendar.date(byAdding: .day, value: -days, to: nextDueDate) ?? nextDueDate
@@ -40,7 +40,6 @@ final class NotificationService {
             guard notifyDate > Date() else { continue }
             
             let content = UNMutableNotificationContent()
-            content.title = "Vaccination Reminder"
             
             let daysText: String
             switch days {
@@ -48,14 +47,31 @@ final class NotificationService {
                 daysText = "today"
             case 1:
                 daysText = "tomorrow"
+            case 3:
+                daysText = "in 3 days"
+            case 7:
+                daysText = "in 1 week"
+            case 14:
+                daysText = "in 2 weeks"
+            case 30:
+                daysText = "in 1 month"
             default:
                 daysText = "in \(days) days"
             }
             
-            content.body = "\(pet.name)'s \(vaccine.vaccineName) vaccination is due \(daysText)"
+            content.title = "🏥 \(pet.name)'s Vaccine Due"
+            content.body = "\(vaccine.vaccineName) is due \(daysText). Don't forget to schedule the vet appointment!"
             content.sound = .default
             content.badge = 1
-            content.userInfo = ["petId": pet.id.uuidString, "vaccineId": vaccine.id.uuidString, "type": "vaccine"]
+            content.categoryIdentifier = "VACCINE_REMINDER"
+            content.userInfo = [
+                "petId": pet.id.uuidString,
+                "vaccineId": vaccine.id.uuidString,
+                "type": "vaccine",
+                "petName": pet.name,
+                "vaccineName": vaccine.vaccineName,
+                "dueDate": nextDueDate.timeIntervalSince1970
+            ]
             
             var dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: notifyDate)
             dateComponents.hour = 9
@@ -79,11 +95,19 @@ final class NotificationService {
         
         for (index, reminderTime) in medication.reminderTimes.enumerated() {
             let content = UNMutableNotificationContent()
-            content.title = "Medication Reminder"
-            content.body = "\(pet.name) needs \(medication.name) - \(medication.dosage)"
+            content.title = "💊 Time for \(pet.name)'s Medication"
+            content.body = "\(medication.name) - \(medication.dosage). Tap to mark as given."
             content.sound = .default
             content.badge = 1
-            content.userInfo = ["petId": pet.id.uuidString, "medicationId": medication.id.uuidString, "type": "medication"]
+            content.categoryIdentifier = "MEDICATION_REMINDER"
+            content.userInfo = [
+                "petId": pet.id.uuidString,
+                "medicationId": medication.id.uuidString,
+                "type": "medication",
+                "petName": pet.name,
+                "medicationName": medication.name,
+                "dosage": medication.dosage
+            ]
             
             let calendar = Calendar.current
             
@@ -104,7 +128,7 @@ final class NotificationService {
     
     func cancelVaccineReminders(for pet: Pet, vaccine: VaccineRecord) {
         let center = UNUserNotificationCenter.current()
-        let daysToNotify = [7, 3, 1, 0]
+        let daysToNotify = [30, 14, 7, 3, 1, 0]
         
         var identifiers: [String] = []
         for days in daysToNotify {
@@ -151,5 +175,17 @@ final class NotificationService {
                 print("Failed to clear badge: \(error)")
             }
         }
+    }
+    
+    func setupNotificationCategories() {
+        let center = UNUserNotificationCenter.current()
+        
+        let vaccineAction = UNNotificationAction(identifier: "SCHEDULE_VET", title: "Schedule Vet", options: .foreground)
+        let vaccineCategory = UNNotificationCategory(identifier: "VACCINE_REMINDER", actions: [vaccineAction], intentIdentifiers: [])
+        
+        let markGivenAction = UNNotificationAction(identifier: "MARK_GIVEN", title: "Mark as Given", options: .foreground)
+        let medicationCategory = UNNotificationCategory(identifier: "MEDICATION_REMINDER", actions: [markGivenAction], intentIdentifiers: [])
+        
+        center.setNotificationCategories([vaccineCategory, medicationCategory])
     }
 }

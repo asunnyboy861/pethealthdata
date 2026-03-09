@@ -32,6 +32,7 @@ struct pethealthdataApp: App {
             ContentView()
                 .onAppear {
                     requestNotificationPermission()
+                    NotificationService.shared.setupNotificationCategories()
                 }
         }
         .modelContainer(sharedModelContainer)
