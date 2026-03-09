@@ -17,7 +17,7 @@ struct pethealthdataApp: App {
                 schema: schema,
                 isStoredInMemoryOnly: false,
                 allowsSave: true,
-                cloudKitDatabase: .none
+                cloudKitDatabase: .private("iCloud.com.zzoutuo.pethealthdata")
             )
             
             let container = try ModelContainer(for: schema, configurations: [configuration])
