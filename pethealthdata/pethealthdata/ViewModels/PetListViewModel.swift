@@ -43,7 +43,9 @@ final class PetListViewModel {
         let upcomingCount = pets.reduce(0) { $0 + $1.upcomingVaccinesCount }
         sharedData.saveUpcomingVaccines(upcomingCount)
         
+        #if !targetEnvironment(simulator)
         WidgetCenter.shared.reloadTimelines(ofKind: "PetHealthWidget")
+        #endif
     }
     
     func addPet(_ pet: Pet) {
