@@ -13,11 +13,13 @@ struct pethealthdataApp: App {
                 HealthEvent.self
             ])
             
+            // TEMPORARY: Disabled CloudKit for testing
+            // Uncomment the line below to enable CloudKit after configuring iCloud container
             let configuration = ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: false,
-                allowsSave: true,
-                cloudKitDatabase: .private("iCloud.com.zzoutuo.pethealthdata")
+                allowsSave: true
+                // cloudKitDatabase: .private("iCloud.com.zzoutuo.pethealthdata")
             )
             
             let container = try ModelContainer(for: schema, configurations: [configuration])
