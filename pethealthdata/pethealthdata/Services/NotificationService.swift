@@ -61,7 +61,7 @@ final class NotificationService {
             
             content.title = "🏥 \(pet.name)'s Vaccine Due"
             content.body = "\(vaccine.vaccineName) is due \(daysText). Don't forget to schedule the vet appointment!"
-            content.sound = .default
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("triTone.caf"))
             content.badge = 1
             content.categoryIdentifier = "VACCINE_REMINDER"
             content.userInfo = [
@@ -97,7 +97,7 @@ final class NotificationService {
             let content = UNMutableNotificationContent()
             content.title = "💊 Time for \(pet.name)'s Medication"
             content.body = "\(medication.name) - \(medication.dosage). Tap to mark as given."
-            content.sound = .default
+            content.sound = UNNotificationSound(named: UNNotificationSoundName("bamboo.caf"))
             content.badge = 1
             content.categoryIdentifier = "MEDICATION_REMINDER"
             content.userInfo = [
