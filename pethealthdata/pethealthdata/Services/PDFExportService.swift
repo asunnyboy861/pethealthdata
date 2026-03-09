@@ -64,7 +64,7 @@ final class PDFExportService {
             yPosition = drawVaccineSection(vaccines: filteredVaccines, yPosition: yPosition, margin: margin, width: contentWidth, context: context, pageHeight: pageHeight, pageWidth: pageWidth)
             yPosition = drawMedicationSection(medications: filteredMedications, yPosition: yPosition, margin: margin, width: contentWidth, context: context, pageHeight: pageHeight, pageWidth: pageWidth)
             yPosition = drawWeightSection(weightRecords: filteredWeightRecords, yPosition: yPosition, margin: margin, width: contentWidth, context: context, pageHeight: pageHeight, pageWidth: pageWidth)
-            drawHealthEventsSection(events: filteredEvents, yPosition: yPosition, margin: margin, width: contentWidth, context: context, pageHeight: pageHeight, pageWidth: pageWidth)
+            yPosition = drawHealthEventsSection(events: filteredEvents, yPosition: yPosition, margin: margin, width: contentWidth, context: context, pageHeight: pageHeight, pageWidth: pageWidth)
             
             drawFooter(pageRect: pageRect)
         }
@@ -167,9 +167,9 @@ final class PDFExportService {
                     y = 50
                 }
                 
-                let vaccineInfo = "\(vaccine.vaccineName) - \(dateFormatter.string(from: vaccine.vaccinationDate))"
+                var vaccineInfo = "\(vaccine.vaccineName) - \(dateFormatter.string(from: vaccine.vaccinationDate))"
                 if let nextDate = vaccine.nextDueDate {
-                    vaccineInfo + " (Next: \(dateFormatter.string(from: nextDate)))"
+                    vaccineInfo += " (Next: \(dateFormatter.string(from: nextDate)))"
                 }
                 vaccineInfo.draw(at: CGPoint(x: margin + 10, y: y), withAttributes: infoAttributes)
                 y += 16

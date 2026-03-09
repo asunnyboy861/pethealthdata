@@ -25,7 +25,7 @@ struct VaccineRowView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.appTextSecondary)
                     
-                    if let nextDueDate = vaccine.nextDueDate {
+                    if vaccine.nextDueDate != nil {
                         Text("•")
                             .foregroundColor(.appTextSecondary)
                         statusBadge

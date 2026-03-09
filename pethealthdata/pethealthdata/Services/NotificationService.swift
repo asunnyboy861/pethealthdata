@@ -87,7 +87,7 @@ final class NotificationService {
             
             let calendar = Calendar.current
             
-            var dateComponents = calendar.dateComponents([.hour, .minute], from: reminderTime)
+            let dateComponents = calendar.dateComponents([.hour, .minute], from: reminderTime)
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
             

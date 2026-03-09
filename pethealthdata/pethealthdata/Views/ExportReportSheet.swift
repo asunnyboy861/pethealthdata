@@ -62,7 +62,7 @@ struct ExportReportSheet: View {
                 
                 Spacer()
                 
-                if let pdfData = generatedPDF {
+                if generatedPDF != nil {
                     Button {
                         showingShareSheet = true
                     } label: {
