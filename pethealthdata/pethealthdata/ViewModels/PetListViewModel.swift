@@ -12,6 +12,7 @@ final class PetListViewModel {
     var selectedPet: Pet?
     
     private var modelContext: ModelContext?
+    private var hasReloadedWidget = false
     
     func setup(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -43,9 +44,16 @@ final class PetListViewModel {
         let upcomingCount = pets.reduce(0) { $0 + $1.upcomingVaccinesCount }
         sharedData.saveUpcomingVaccines(upcomingCount)
         
-        #if !targetEnvironment(simulator)
-        WidgetCenter.shared.reloadTimelines(ofKind: "PetHealthWidget")
-        #endif
+        reloadWidgetIfNeeded()
+    }
+    
+    private func reloadWidgetIfNeeded() {
+        guard !hasReloadedWidget else { return }
+        hasReloadedWidget = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            WidgetCenter.shared.reloadTimelines(ofKind: "PetHealthWidget")
+        }
     }
     
     func addPet(_ pet: Pet) {

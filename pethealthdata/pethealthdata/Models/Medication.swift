@@ -25,7 +25,7 @@ final class Medication {
         startDate: Date = Date(),
         endDate: Date? = nil,
         notes: String? = nil,
-        notificationSound: String = "bamboo.caf",
+        notificationSound: String = "reminder",
         isActive: Bool = true,
         createdAt: Date = Date(),
         pet: Pet? = nil
@@ -58,7 +58,7 @@ final class Medication {
         get {
             guard let data = notificationSoundData,
                   let sound = try? JSONDecoder().decode(String.self, from: data) else {
-                return "bamboo.caf"
+                return "reminder"
             }
             return sound
         }
@@ -123,39 +123,54 @@ final class Medication {
     }
     
     /// Check if medication is due today
+    /// - Parameter today: Today's date (typically Calendar.current.startOfDay(for: Date()))
+    /// - Returns: true if medication is due, false otherwise
+    /// 
+    /// Logic:
+    /// 1. Check if medication is active and within valid date range
+    /// 2. For as-needed medications, always show
+    /// 3. Check reminder times against CURRENT time (not start of day)
+    ///    - Example: At 3 PM, 9 AM dose should show as "completed", not "due"
     func isDueToday(today: Date) -> Bool {
         guard isActive else { return false }
         
         let calendar = Calendar.current
         
-        // Check if within active period
+        // 1. Check validity period
         guard startDate <= today else { return false }
         if let endDate = endDate, endDate < today {
             return false
         }
         
-        // For as-needed medications, always show
+        // 2. For as-needed medications, always show
         if frequency == "as_needed" {
             return true
         }
         
-        // Check if there's a reminder time for today
+        // 3. Check reminder times
         let times = reminderTimes.sorted()
         if times.isEmpty {
-            return true // No specific times, show as due
+            return true // No specific times, show as pending
         }
         
-        // Check if any dose time is today
+        // 4. Check if any dose time is in the future (FIXED: Compare with current time, not start of day)
+        let now = Date()
         for time in times {
             let hour = calendar.component(.hour, from: time)
             let minute = calendar.component(.minute, from: time)
-            if let doseTime = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: today),
-               doseTime >= today {
+            
+            var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            todayComponents.hour = hour
+            todayComponents.minute = minute
+            
+            if let doseTime = calendar.date(from: todayComponents),
+               doseTime >= now {  // FIXED: Compare with Date() instead of today
                 return true
             }
         }
         
-        return !times.isEmpty
+        // All dose times have passed
+        return false
     }
 }
 

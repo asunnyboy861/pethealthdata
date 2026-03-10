@@ -4,6 +4,7 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage("reminderTime") private var reminderTimeInterval: TimeInterval = Date().timeIntervalSince1970
     @AppStorage("reminderDays") private var reminderDaysString: String = "[30, 14, 7, 3, 1, 0]"
+    @AppStorage("notificationSound") private var notificationSound: String = NotificationSoundConfig.SoundOption.default.fileName
     
     private var reminderTime: Date {
         get { Date(timeIntervalSince1970: reminderTimeInterval) }
@@ -26,9 +27,12 @@ struct SettingsView: View {
         }
     }
     
+    private var selectedSoundName: String {
+        NotificationSoundConfig.SoundOption.allCases.first { $0.fileName == notificationSound }?.name ?? "Default"
+    }
+    
     var body: some View {
         Form {
-            // MARK: - Reminders
             Section("Reminders") {
                 NavigationLink(destination: ReminderTimeConfigView()) {
                     HStack {
@@ -50,7 +54,7 @@ struct SettingsView: View {
                 }
                 
                 NavigationLink(destination: NotificationSoundPickerView(
-                    selectedSound: .constant(NotificationSoundConfig.SoundOption.default.fileName)
+                    selectedSound: $notificationSound
                 )) {
                     HStack {
                         Image(systemName: "speaker.wave.2.fill")
@@ -60,7 +64,7 @@ struct SettingsView: View {
                             Text("Notification Sound")
                                 .foregroundColor(.primary)
                                 .font(.system(size: 16))
-                            Text("Choose alert sounds")
+                            Text(selectedSoundName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -71,7 +75,6 @@ struct SettingsView: View {
                 }
             }
             
-            // MARK: - iCloud & Sync
             Section("iCloud & Sync") {
                 NavigationLink(destination: CloudKitStatusView()) {
                     HStack {
@@ -93,7 +96,6 @@ struct SettingsView: View {
                 }
             }
             
-            // MARK: - Data Management
             Section("Data Management") {
                 NavigationLink(destination: ExportDataView()) {
                     HStack {
@@ -108,7 +110,6 @@ struct SettingsView: View {
                 }
             }
             
-            // MARK: - App Information
             Section("App Information") {
                 HStack {
                     Text("Version")
@@ -149,23 +150,19 @@ struct SettingsView: View {
     }
 }
 
-/// Export Data View placeholder
 struct ExportDataView: View {
     var body: some View {
         Form {
             Section("Export Options") {
                 Button("Export as PDF") {
-                    // Export functionality
                 }
                 
                 Button("Export as CSV") {
-                    // Export functionality
                 }
             }
             
             Section("Share") {
                 Button("Share with Vet") {
-                    // Share functionality
                 }
             }
         }

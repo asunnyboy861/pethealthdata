@@ -28,7 +28,7 @@ final class VaccineRecord {
         createdAt: Date = Date(),
         reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date(),
         reminderDaysBefore: [Int] = [30, 14, 7, 3, 1, 0],
-        notificationSound: String = "triTone.caf",
+        notificationSound: String = "newMail",
         pet: Pet? = nil
     ) {
         self.id = id
