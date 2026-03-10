@@ -1,28 +1,13 @@
 import SwiftUI
 import SwiftData
-import CloudKit
 
 @main
 struct pethealthdataApp: App {
     var sharedModelContainer: ModelContainer = {
         do {
-            let schema = Schema([
-                Pet.self,
-                VaccineRecord.self,
-                Medication.self,
-                WeightRecord.self,
-                HealthEvent.self
-            ])
-            
-            // Enable CloudKit synchronization for cross-device data sync
-            let configuration = ModelConfiguration(
-                schema: schema,
-                isStoredInMemoryOnly: false,
-                allowsSave: true,
-                cloudKitDatabase: .automatic
-            )
-            
-            let container = try ModelContainer(for: schema, configurations: [configuration])
+            // 暂时禁用 CloudKit 以避免启动崩溃 - 上架前恢复
+            // 使用默认配置（无 CloudKit）
+            let container = try ModelContainer(for: Pet.self, VaccineRecord.self, Medication.self, WeightRecord.self, HealthEvent.self)
             return container
         } catch {
             fatalError("Failed to initialize ModelContainer: \(error.localizedDescription)")
