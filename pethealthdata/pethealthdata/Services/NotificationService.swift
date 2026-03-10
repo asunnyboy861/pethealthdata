@@ -29,10 +29,10 @@ final class NotificationService {
         guard let nextDueDate = vaccine.nextDueDate else { return }
         
         let center = UNUserNotificationCenter.current()
-        
         let calendar = Calendar.current
         
-        let daysToNotify = [30, 14, 7, 3, 1, 0]
+        // Use custom reminder days from vaccine record, fallback to defaults
+        let daysToNotify = vaccine.reminderDaysBefore.isEmpty ? [30, 14, 7, 3, 1, 0] : vaccine.reminderDaysBefore
         
         for days in daysToNotify {
             let notifyDate = calendar.date(byAdding: .day, value: -days, to: nextDueDate) ?? nextDueDate
@@ -61,7 +61,6 @@ final class NotificationService {
             
             content.title = "🏥 \(pet.name)'s Vaccine Due"
             content.body = "\(vaccine.vaccineName) is due \(daysText). Don't forget to schedule the vet appointment!"
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("triTone.caf"))
             content.badge = 1
             content.categoryIdentifier = "VACCINE_REMINDER"
             content.userInfo = [
@@ -73,11 +72,19 @@ final class NotificationService {
                 "dueDate": nextDueDate.timeIntervalSince1970
             ]
             
-            var dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: notifyDate)
-            dateComponents.hour = 9
-            dateComponents.minute = 0
+            // Use custom reminder time from vaccine record
+            let reminderTimeComponents = calendar.dateComponents([.hour, .minute], from: vaccine.reminderTime)
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: notifyDate)
+            dateComponents.hour = reminderTimeComponents.hour
+            dateComponents.minute = reminderTimeComponents.minute
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+            
+            // Use custom sound from vaccine record
+            if !vaccine.notificationSound.isEmpty && vaccine.notificationSound != "silent" {
+                let soundName = String(vaccine.notificationSound.dropLast(4)) // Remove .caf extension
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
+            }
             
             let identifier = "\(pet.id.uuidString)-\(vaccine.id.uuidString)-\(days)days"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
@@ -93,11 +100,16 @@ final class NotificationService {
     func scheduleMedicationReminder(for pet: Pet, medication: Medication) {
         let center = UNUserNotificationCenter.current()
         
+        // Use custom sound from medication record
+        var soundName: String = "bamboo"
+        if !medication.notificationSound.isEmpty && medication.notificationSound != "silent" {
+            soundName = String(medication.notificationSound.dropLast(4)) // Remove .caf extension
+        }
+        
         for (index, reminderTime) in medication.reminderTimes.enumerated() {
             let content = UNMutableNotificationContent()
             content.title = "💊 Time for \(pet.name)'s Medication"
             content.body = "\(medication.name) - \(medication.dosage). Tap to mark as given."
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("bamboo.caf"))
             content.badge = 1
             content.categoryIdentifier = "MEDICATION_REMINDER"
             content.userInfo = [
@@ -108,6 +120,11 @@ final class NotificationService {
                 "medicationName": medication.name,
                 "dosage": medication.dosage
             ]
+            
+            // Use custom sound
+            if !medication.notificationSound.isEmpty && medication.notificationSound != "silent" {
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
+            }
             
             let calendar = Calendar.current
             

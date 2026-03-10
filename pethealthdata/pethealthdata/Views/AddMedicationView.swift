@@ -13,7 +13,8 @@ struct AddMedicationView: View {
     @State private var startDate: Date = Date()
     @State private var hasEndDate: Bool = false
     @State private var endDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
-    @State private var reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+    @State private var reminderTimes: [Date] = []
+    @State private var selectedSound: String = NotificationSoundConfig.SoundOption.medicationDefault.fileName
     @State private var enableReminder: Bool = true
     @State private var notes: String = ""
     
@@ -52,7 +53,46 @@ struct AddMedicationView: View {
                     Toggle("Enable Reminder", isOn: $enableReminder)
                     
                     if enableReminder && frequency != "as_needed" {
-                        DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
+                        // Multiple reminder times list
+                        VStack(alignment: .leading) {
+                            Text("Reminder Times")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            if reminderTimes.isEmpty {
+                                Button(action: addReminderTime) {
+                                    Label("Add Time", systemImage: "plus.circle")
+                                }
+                                .buttonStyle(.borderless)
+                            } else {
+                                ForEach(reminderTimes.indices, id: \.self) { index in
+                                    HStack {
+                                        DatePicker("", selection: $reminderTimes[index], displayedComponents: .hourAndMinute)
+                                        Spacer()
+                                        Button(action: { removeReminder(at: index) }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.red)
+                                        }
+                                    }
+                                }
+                                
+                                Button(action: addReminderTime) {
+                                    Label("Add Another Time", systemImage: "plus.circle")
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        
+                        // Sound selection
+                        NavigationLink(destination: NotificationSoundPickerView(selectedSound: $selectedSound)) {
+                            HStack {
+                                Text("Notification Sound")
+                                Spacer()
+                                Text(NotificationSoundConfig.SoundOption.allCases.first { $0.fileName == selectedSound }?.name ?? "Bamboo")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                 }
                 
@@ -81,19 +121,15 @@ struct AddMedicationView: View {
     }
     
     private func saveMedication() {
-        var reminderTimes: [Date] = []
-        if enableReminder && frequency != "as_needed" {
-            reminderTimes = [reminderTime]
-        }
-        
         let medication = Medication(
             name: name,
             dosage: dosage,
             frequency: frequency,
-            reminderTimes: reminderTimes,
+            reminderTimes: reminderTimes.isEmpty && enableReminder && frequency != "as_needed" ? [Date()] : reminderTimes,
             startDate: startDate,
             endDate: hasEndDate ? endDate : nil,
             notes: notes.isEmpty ? nil : notes,
+            notificationSound: selectedSound,
             isActive: true,
             pet: pet
         )
@@ -107,6 +143,14 @@ struct AddMedicationView: View {
         
         try? modelContext.save()
         dismiss()
+    }
+    
+    private func addReminderTime() {
+        reminderTimes.append(Date())
+    }
+    
+    private func removeReminder(at index: Int) {
+        reminderTimes.remove(at: index)
     }
 }
 

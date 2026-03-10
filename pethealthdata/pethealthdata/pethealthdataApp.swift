@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CloudKit
 
 @main
 struct pethealthdataApp: App {
@@ -13,12 +14,12 @@ struct pethealthdataApp: App {
                 HealthEvent.self
             ])
             
-            // TEMPORARY: Use in-memory storage for testing
-            // Change to false for persistent storage
+            // Enable CloudKit synchronization for cross-device data sync
             let configuration = ModelConfiguration(
                 schema: schema,
-                isStoredInMemoryOnly: true,
-                allowsSave: true
+                isStoredInMemoryOnly: false,
+                allowsSave: true,
+                cloudKitDatabase: .automatic
             )
             
             let container = try ModelContainer(for: schema, configurations: [configuration])
@@ -30,7 +31,7 @@ struct pethealthdataApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
                 .onAppear {
                     requestNotificationPermission()
                     NotificationService.shared.setupNotificationCategories()

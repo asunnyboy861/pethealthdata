@@ -15,6 +15,40 @@ struct AddVaccineView: View {
     @State private var notes: String = ""
     @State private var selectedVaccineType: String = ""
     
+    // Reminder settings
+    @State private var reminderTime: Date = VaccineReminderConfig.defaultReminderTime
+    @State private var selectedReminderDays: [Int] = VaccineReminderConfig.defaultReminderDays
+    @State private var selectedSound: String = NotificationSoundConfig.SoundOption.default.fileName
+    
+    @ViewBuilder
+    private func reminderSettingsContent() -> some View {
+        // Reminder time picker
+        DatePicker("Reminder Time", selection: $reminderTime, displayedComponents: .hourAndMinute)
+        
+        // Advance notification days
+        DisclosureGroup {
+            ReminderDaysPicker(selectedDays: $selectedReminderDays)
+                .padding(.vertical, 4)
+        } label: {
+            HStack {
+                Text("Notify Before")
+                Spacer()
+                Text("\(selectedReminderDays.count) reminders")
+                    .foregroundColor(.secondary)
+            }
+        }
+        
+        // Sound selection
+        NavigationLink(destination: NotificationSoundPickerView(selectedSound: $selectedSound)) {
+            HStack {
+                Text("Notification Sound")
+                Spacer()
+                Text(NotificationSoundConfig.SoundOption.allCases.first { $0.fileName == selectedSound }?.name ?? "Tri-Tone")
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -41,6 +75,18 @@ struct AddVaccineView: View {
                     
                     if hasNextDueDate {
                         DatePicker("Next Due Date", selection: $nextDueDate, displayedComponents: .date)
+                    }
+                }
+                
+                // Reminder Settings section - using conditional Section content
+                if hasNextDueDate {
+                    Section("Reminder Settings") {
+                        reminderSettingsContent()
+                    }
+                } else {
+                    Section("Reminder Settings") {
+                        Text("Set a next due date to enable reminders")
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -79,6 +125,9 @@ struct AddVaccineView: View {
             nextDueDate: hasNextDueDate ? nextDueDate : nil,
             veterinarian: veterinarian.isEmpty ? nil : veterinarian,
             notes: notes.isEmpty ? nil : notes,
+            reminderTime: reminderTime,
+            reminderDaysBefore: selectedReminderDays.isEmpty ? [30, 14, 7, 3, 1, 0] : selectedReminderDays,
+            notificationSound: selectedSound,
             pet: pet
         )
         

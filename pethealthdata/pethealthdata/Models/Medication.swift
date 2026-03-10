@@ -11,6 +11,7 @@ final class Medication {
     var startDate: Date
     var endDate: Date?
     var notes: String?
+    var notificationSoundData: Data?
     var isActive: Bool
     var createdAt: Date
     var pet: Pet?
@@ -24,6 +25,7 @@ final class Medication {
         startDate: Date = Date(),
         endDate: Date? = nil,
         notes: String? = nil,
+        notificationSound: String = "bamboo.caf",
         isActive: Bool = true,
         createdAt: Date = Date(),
         pet: Pet? = nil
@@ -36,6 +38,7 @@ final class Medication {
         self.startDate = startDate
         self.endDate = endDate
         self.notes = notes
+        self.notificationSoundData = try? JSONEncoder().encode(notificationSound)
         self.isActive = isActive
         self.createdAt = createdAt
         self.pet = pet
@@ -48,6 +51,19 @@ final class Medication {
         }
         set {
             reminderTimesData = try? JSONEncoder().encode(newValue)
+        }
+    }
+    
+    var notificationSound: String {
+        get {
+            guard let data = notificationSoundData,
+                  let sound = try? JSONDecoder().decode(String.self, from: data) else {
+                return "bamboo.caf"
+            }
+            return sound
+        }
+        set {
+            notificationSoundData = try? JSONEncoder().encode(newValue)
         }
     }
     
@@ -104,5 +120,56 @@ final class Medication {
         }
         
         return nil
+    }
+    
+    /// Check if medication is due today
+    func isDueToday(today: Date) -> Bool {
+        guard isActive else { return false }
+        
+        let calendar = Calendar.current
+        
+        // Check if within active period
+        guard startDate <= today else { return false }
+        if let endDate = endDate, endDate < today {
+            return false
+        }
+        
+        // For as-needed medications, always show
+        if frequency == "as_needed" {
+            return true
+        }
+        
+        // Check if there's a reminder time for today
+        let times = reminderTimes.sorted()
+        if times.isEmpty {
+            return true // No specific times, show as due
+        }
+        
+        // Check if any dose time is today
+        for time in times {
+            let hour = calendar.component(.hour, from: time)
+            let minute = calendar.component(.minute, from: time)
+            if let doseTime = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: today),
+               doseTime >= today {
+                return true
+            }
+        }
+        
+        return !times.isEmpty
+    }
+}
+
+// MARK: - Additional Properties Extension
+extension Medication {
+    /// Last time medication was taken (for tracking)
+    var lastTaken: Date? {
+        get {
+            // Could be stored in notes or a separate field if needed
+            return nil
+        }
+        set {
+            // For now, this is a computed property placeholder
+            // In a real app, you'd want to store this in a persistent field
+        }
     }
 }

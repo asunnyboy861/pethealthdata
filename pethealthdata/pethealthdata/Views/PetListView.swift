@@ -23,7 +23,7 @@ struct PetListView: View {
                 
                 addButton
             }
-            .navigationTitle("My Pets")
+            .navigationTitle("Home")
             .searchable(text: $searchText, prompt: "Search pets")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

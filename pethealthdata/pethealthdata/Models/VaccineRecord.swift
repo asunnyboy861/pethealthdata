@@ -10,6 +10,12 @@ final class VaccineRecord {
     var veterinarian: String?
     var notes: String?
     var createdAt: Date
+    
+    // Reminder configuration fields
+    var reminderTime: Date
+    var reminderDaysBefore: [Int]
+    var notificationSound: String
+    
     var pet: Pet?
     
     init(
@@ -20,6 +26,9 @@ final class VaccineRecord {
         veterinarian: String? = nil,
         notes: String? = nil,
         createdAt: Date = Date(),
+        reminderTime: Date = Calendar.current.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date(),
+        reminderDaysBefore: [Int] = [30, 14, 7, 3, 1, 0],
+        notificationSound: String = "triTone.caf",
         pet: Pet? = nil
     ) {
         self.id = id
@@ -29,6 +38,9 @@ final class VaccineRecord {
         self.veterinarian = veterinarian
         self.notes = notes
         self.createdAt = createdAt
+        self.reminderTime = reminderTime
+        self.reminderDaysBefore = reminderDaysBefore
+        self.notificationSound = notificationSound
         self.pet = pet
     }
     

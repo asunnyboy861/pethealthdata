@@ -64,13 +64,13 @@ struct PetDetailView: View {
         .sheet(isPresented: $showingExportSheet) {
             ExportReportSheet(pet: pet)
         }
-        .alert("Delete Pet", isPresented: $showingDeleteAlert) {
+        .alert("Delete \(pet.name)?", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 deletePet()
             }
         } message: {
-            Text("Are you sure you want to delete \(pet.name)? This action cannot be undone.")
+            Text("This will permanently delete all records for \(pet.name) including:\n\n• Vaccinations (\(pet.vaccines.count))\n• Medications (\(pet.medications.count))\n• Weight history (\(pet.weightRecords.count))\n• Health events (\(pet.healthEvents.count))\n\nThis action cannot be undone.")
         }
     }
     
