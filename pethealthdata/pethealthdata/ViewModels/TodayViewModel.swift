@@ -29,14 +29,13 @@ class TodayViewModel: ObservableObject {
             let endOfToday = calendar.date(byAdding: .day, value: 1, to: today) ?? today
             let threeDaysFromNow = calendar.date(byAdding: .day, value: 3, to: today) ?? today
             
-            // Load today's vaccines
-            let vaccineDescriptor = FetchDescriptor<VaccineRecord>(
-                predicate: #Predicate { vaccine in
-                    guard let nextDueDate = vaccine.nextDueDate else { return false }
-                    return nextDueDate >= today && nextDueDate < endOfToday
-                }
-            )
-            todayVaccines = try modelContext.fetch(vaccineDescriptor)
+            // Load today's vaccines - fetch all and filter in Swift
+            let vaccineDescriptor = FetchDescriptor<VaccineRecord>()
+            let allVaccines = try modelContext.fetch(vaccineDescriptor)
+            todayVaccines = allVaccines.filter { vaccine in
+                guard let nextDueDate = vaccine.nextDueDate else { return false }
+                return nextDueDate >= today && nextDueDate < endOfToday
+            }
             
             // Load today's medications
             let medicationDescriptor = FetchDescriptor<Medication>(
@@ -46,8 +45,7 @@ class TodayViewModel: ObservableObject {
             )
             let allMedications = try modelContext.fetch(medicationDescriptor)
             todayMedications = allMedications.filter { medication in
-                guard let startDate = medication.startDate else { return false }
-                guard startDate <= today else { return false }
+                guard medication.startDate <= today else { return false }
                 
                 if let endDate = medication.endDate {
                     guard endDate >= today else { return false }
@@ -73,14 +71,13 @@ class TodayViewModel: ObservableObject {
         let today = calendar.startOfDay(for: Date())
         
         do {
-            // Upcoming vaccines (within 3 days)
-            let upcomingVaccineDescriptor = FetchDescriptor<VaccineRecord>(
-                predicate: #Predicate { vaccine in
-                    guard let nextDueDate = vaccine.nextDueDate else { return false }
-                    return nextDueDate > today && nextDueDate <= date
-                }
-            )
-            let upcomingVaccines = try modelContext.fetch(upcomingVaccineDescriptor)
+            // Upcoming vaccines (within 3 days) - fetch all and filter in Swift
+            let upcomingVaccineDescriptor = FetchDescriptor<VaccineRecord>()
+            let allVaccines = try modelContext.fetch(upcomingVaccineDescriptor)
+            let upcomingVaccines = allVaccines.filter { vaccine in
+                guard let nextDueDate = vaccine.nextDueDate else { return false }
+                return nextDueDate > today && nextDueDate <= date
+            }
             for vaccine in upcomingVaccines {
                 reminders.append(UpcomingReminder(
                     id: UUID(),
@@ -92,14 +89,13 @@ class TodayViewModel: ObservableObject {
                 ))
             }
             
-            // Upcoming medication end dates
-            let upcomingMedsDescriptor = FetchDescriptor<Medication>(
-                predicate: #Predicate { medication in
-                    guard let endDate = medication.endDate else { return false }
-                    return endDate > today && endDate <= date && medication.isActive
-                }
-            )
-            let upcomingMeds = try modelContext.fetch(upcomingMedsDescriptor)
+            // Upcoming medication end dates - fetch all and filter in Swift
+            let upcomingMedsDescriptor = FetchDescriptor<Medication>()
+            let allMedications = try modelContext.fetch(upcomingMedsDescriptor)
+            let upcomingMeds = allMedications.filter { medication in
+                guard let endDate = medication.endDate else { return false }
+                return endDate > today && endDate <= date && medication.isActive
+            }
             for med in upcomingMeds {
                 reminders.append(UpcomingReminder(
                     id: UUID(),

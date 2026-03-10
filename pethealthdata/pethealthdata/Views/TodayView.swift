@@ -10,11 +10,11 @@ struct TodayView: View {
     @State private var showingEmptyState: Bool = false
     
     private let today = Date()
-    private let threeDaysFromNow: Date
+    private var threeDaysFromNow: Date {
+        Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date()
+    }
     
     init() {
-        let calendar = Calendar.current
-        _threeDaysFromNow = State(initialValue: calendar.date(byAdding: .day, value: 3, to: Date()) ?? Date())
         _viewModel = StateObject(wrappedValue: TodayViewModel(modelContext: ModelContext(try! ModelContainer(for: Pet.self, VaccineRecord.self, Medication.self, WeightRecord.self, HealthEvent.self))))
     }
     

@@ -2,8 +2,29 @@ import SwiftUI
 
 /// Settings view (as a standalone Tab)
 struct SettingsView: View {
-    @AppStorage("reminderTime") private var reminderTime: Date = Date()
-    @AppStorage("reminderDays") private var reminderDays: [Int] = [30, 14, 7, 3, 1, 0]
+    @AppStorage("reminderTime") private var reminderTimeInterval: TimeInterval = Date().timeIntervalSince1970
+    @AppStorage("reminderDays") private var reminderDaysString: String = "[30, 14, 7, 3, 1, 0]"
+    
+    private var reminderTime: Date {
+        get { Date(timeIntervalSince1970: reminderTimeInterval) }
+        set { reminderTimeInterval = newValue.timeIntervalSince1970 }
+    }
+    
+    private var reminderDays: [Int] {
+        get {
+            guard let data = reminderDaysString.data(using: .utf8),
+                  let days = try? JSONDecoder().decode([Int].self, from: data) else {
+                return [30, 14, 7, 3, 1, 0]
+            }
+            return days
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue),
+               let string = String(data: data, encoding: .utf8) {
+                reminderDaysString = string
+            }
+        }
+    }
     
     var body: some View {
         Form {
@@ -24,7 +45,7 @@ struct SettingsView: View {
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -45,7 +66,7 @@ struct SettingsView: View {
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -67,7 +88,7 @@ struct SettingsView: View {
                         }
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -82,7 +103,7 @@ struct SettingsView: View {
                         Text("Export Data")
                         Spacer()
                         Image(systemName: "chevron.right")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -109,7 +130,7 @@ struct SettingsView: View {
                         Text("Privacy Policy")
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -118,7 +139,7 @@ struct SettingsView: View {
                         Text("Terms of Service")
                         Spacer()
                         Image(systemName: "arrow.up.right.square")
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
