@@ -1,32 +1,40 @@
 import Foundation
 import UserNotifications
 
+@MainActor
 final class NotificationService {
     static let shared = NotificationService()
     
+    // MARK: - New Properties (Enhanced)
+    private let permissionService = NotificationPermissionService.shared
+    private let soundValidator = NotificationSoundValidator.shared
+    
     private init() {}
     
+    // MARK: - Authorization Methods (Enhanced)
+    
     func requestAuthorization(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound, .criticalAlert]) { granted, error in
-            if let error = error {
-                print("Notification authorization error: \(error)")
-            }
-            DispatchQueue.main.async {
-                completion(granted)
-            }
-        }
+        permissionService.requestAuthorization(completion: completion)
     }
     
     func checkAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
-        UNUserNotificationCenter.current().getNotificationSettings { settings in
-            DispatchQueue.main.async {
-                completion(settings.authorizationStatus)
-            }
-        }
+        permissionService.refreshStatus()
+        completion(permissionService.authorizationStatus)
     }
     
+    // MARK: - Scheduling Methods (Enhanced)
+    
     func scheduleVaccineReminder(for pet: Pet, vaccine: VaccineRecord) {
-        guard let nextDueDate = vaccine.nextDueDate else { return }
+        // ✅ Enhanced: Verify authorization before scheduling
+        guard permissionService.isAuthorized() else {
+            print("⚠️ Cannot schedule vaccine reminder: Not authorized")
+            return
+        }
+        
+        guard let nextDueDate = vaccine.nextDueDate else {
+            print("⚠️ Cannot schedule vaccine reminder: No due date")
+            return
+        }
         
         let center = UNUserNotificationCenter.current()
         let calendar = Calendar.current
@@ -80,31 +88,38 @@ final class NotificationService {
             
             let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
             
-            // Use custom sound from vaccine record
-            if !vaccine.notificationSound.isEmpty && vaccine.notificationSound != "silent" {
-                let soundName = String(vaccine.notificationSound.dropLast(4)) // Remove .caf extension
-                content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
-            }
+            // ✅ Enhanced: Use sound validator to get notification sound (with fallback)
+            content.sound = soundValidator.notificationSound(for: vaccine.notificationSound)
             
             let identifier = "\(pet.id.uuidString)-\(vaccine.id.uuidString)-\(days)days"
             let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
             
             center.add(request) { error in
                 if let error = error {
-                    print("Failed to schedule vaccine reminder: \(error)")
+                    print("❌ Failed to schedule vaccine reminder: \(error)")
+                } else {
+                    print("✅ Scheduled vaccine reminder: \(identifier)")
                 }
             }
         }
+        
+        print("✅ Scheduled vaccine reminders for \(vaccine.vaccineName)")
     }
     
     func scheduleMedicationReminder(for pet: Pet, medication: Medication) {
-        let center = UNUserNotificationCenter.current()
-        
-        // Use custom sound from medication record
-        var soundName: String = "bamboo"
-        if !medication.notificationSound.isEmpty && medication.notificationSound != "silent" {
-            soundName = String(medication.notificationSound.dropLast(4)) // Remove .caf extension
+        // ✅ Enhanced: Verify authorization before scheduling
+        guard permissionService.isAuthorized() else {
+            print("⚠️ Cannot schedule medication reminder: Not authorized")
+            return
         }
+        
+        // ✅ Enhanced: Verify reminder times
+        guard !medication.reminderTimes.isEmpty else {
+            print("⚠️ Cannot schedule medication reminder: No reminder times")
+            return
+        }
+        
+        let center = UNUserNotificationCenter.current()
         
         for (index, reminderTime) in medication.reminderTimes.enumerated() {
             let content = UNMutableNotificationContent()
@@ -121,10 +136,8 @@ final class NotificationService {
                 "dosage": medication.dosage
             ]
             
-            // Use custom sound
-            if !medication.notificationSound.isEmpty && medication.notificationSound != "silent" {
-                content.sound = UNNotificationSound(named: UNNotificationSoundName(soundName))
-            }
+            // ✅ Enhanced: Use sound validator to get notification sound (with fallback)
+            content.sound = soundValidator.notificationSound(for: medication.notificationSound)
             
             let calendar = Calendar.current
             
@@ -137,10 +150,14 @@ final class NotificationService {
             
             center.add(request) { error in
                 if let error = error {
-                    print("Failed to schedule medication reminder: \(error)")
+                    print("❌ Failed to schedule medication reminder: \(error)")
+                } else {
+                    print("✅ Scheduled medication reminder: \(identifier)")
                 }
             }
         }
+        
+        print("✅ Scheduled medication reminders for \(medication.name)")
     }
     
     func cancelVaccineReminders(for pet: Pet, vaccine: VaccineRecord) {

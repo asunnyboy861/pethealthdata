@@ -6,16 +6,11 @@ struct TodayView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var pets: [Pet]
     
-    @StateObject private var viewModel: TodayViewModel
-    @State private var showingEmptyState: Bool = false
+    @State private var viewModel: TodayViewModel?
     
     private let today = Date()
     private var threeDaysFromNow: Date {
         Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date()
-    }
-    
-    init() {
-        _viewModel = StateObject(wrappedValue: TodayViewModel(modelContext: ModelContext(try! ModelContainer(for: Pet.self, VaccineRecord.self, Medication.self, WeightRecord.self, HealthEvent.self))))
     }
     
     var body: some View {
@@ -23,17 +18,24 @@ struct TodayView: View {
             Color.appBackground
                 .ignoresSafeArea()
             
-            if viewModel.isLoading {
-                loadingView
-            } else if hasNoReminders {
-                emptyStateView
+            if let viewModel = viewModel {
+                if viewModel.isLoading {
+                    loadingView
+                } else if hasNoReminders {
+                    emptyStateView
+                } else {
+                    reminderListView
+                }
             } else {
-                reminderListView
+                loadingView
             }
         }
         .navigationTitle("Today")
         .navigationBarTitleDisplayMode(.large)
         .task {
+            if viewModel == nil {
+                viewModel = TodayViewModel(modelContext: modelContext)
+            }
             await loadTodaysReminders()
         }
     }
@@ -49,7 +51,8 @@ struct TodayView: View {
     }
     
     private var hasNoReminders: Bool {
-        viewModel.todayVaccines.isEmpty && viewModel.todayMedications.isEmpty
+        guard let viewModel = viewModel else { return true }
+        return viewModel.todayVaccines.isEmpty && viewModel.todayMedications.isEmpty
     }
     
     private var emptyStateView: some View {
@@ -75,7 +78,7 @@ struct TodayView: View {
         ScrollView {
             VStack(spacing: 24) {
                 // Vaccines Section
-                if !viewModel.todayVaccines.isEmpty {
+                if let viewModel = viewModel, !viewModel.todayVaccines.isEmpty {
                     reminderSection(
                         title: "Vaccines Due",
                         icon: "syringe",
@@ -89,7 +92,7 @@ struct TodayView: View {
                 }
                 
                 // Medications Section
-                if !viewModel.todayMedications.isEmpty {
+                if let viewModel = viewModel, !viewModel.todayMedications.isEmpty {
                     reminderSection(
                         title: "Medications",
                         icon: "pills.fill",
@@ -103,7 +106,7 @@ struct TodayView: View {
                 }
                 
                 // Upcoming Section
-                if !viewModel.upcomingReminders.isEmpty {
+                if let viewModel = viewModel, !viewModel.upcomingReminders.isEmpty {
                     upcomingSection
                 }
             }
@@ -159,7 +162,7 @@ struct TodayView: View {
             }
             
             VStack(spacing: 8) {
-                ForEach(viewModel.upcomingReminders) { reminder in
+                ForEach(viewModel?.upcomingReminders ?? []) { reminder in
                     UpcomingReminderCard(reminder: reminder)
                 }
             }
@@ -167,7 +170,7 @@ struct TodayView: View {
     }
     
     private func loadTodaysReminders() async {
-        viewModel.loadTodaysReminders()
+        viewModel?.loadTodaysReminders()
     }
 }
 

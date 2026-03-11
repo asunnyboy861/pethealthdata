@@ -37,6 +37,7 @@ extension Color {
     static let appWarning = Color(hex: "FF9500")
     static let appError = Color(hex: "FF3B30")
     static let appInfo = Color(hex: "5AC8FA")
+    static let appBorder = Color(hex: "E5E7EB")
     
     static let dogColor = Color(hex: "0A84FF")
     static let catColor = Color(hex: "FF6B9D")
